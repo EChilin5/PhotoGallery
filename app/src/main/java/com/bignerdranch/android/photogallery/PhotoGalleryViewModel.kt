@@ -1,7 +1,10 @@
 package com.bignerdranch.android.photogallery
 
 import android.app.Application
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import com.bignerdranch.android.photogallery.api.GalleryItem
 
 class PhotoGalleryViewModel(private val app: Application) : AndroidViewModel(app) {
@@ -15,23 +18,21 @@ class PhotoGalleryViewModel(private val app: Application) : AndroidViewModel(app
         get() = mutableSearchTerm.value ?: ""
 
     init {
+
         mutableSearchTerm.value = QueryPreferences.getStoredQuery(app)
 
-        galleryItemLiveData = FlickrFetchr().searchPhotos("planets")
-
-        Transformations.switchMap(mutableSearchTerm) { searchTerm ->
-            if (searchTerm.isBlank()) {
-                flickrFetchr.fetchPhotos()
-            } else {
-                flickrFetchr.searchPhotos(searchTerm)
+        galleryItemLiveData =
+            Transformations.switchMap(mutableSearchTerm) { searchTerm ->
+                if (searchTerm.isBlank()) {
+                    flickrFetchr.fetchPhotos()
+                } else {
+                    flickrFetchr.searchPhotos(searchTerm)
+                }
             }
-        }
     }
 
-        fun fetchPhotos(query: String = "") {
-            QueryPreferences.setStoredQuery(app, query)
-            mutableSearchTerm.value = query
-        }
-
-
+    fun fetchPhotos(query: String = "") {
+        QueryPreferences.setStoredQuery(app, query)
+        mutableSearchTerm.value = query
+    }
 }

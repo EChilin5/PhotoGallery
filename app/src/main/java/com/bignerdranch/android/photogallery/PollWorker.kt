@@ -11,19 +11,19 @@ import com.bignerdranch.android.photogallery.api.GalleryItem
 
 private const val TAG = "PollWorker"
 
-class PollWorker(val context: Context, workerParams: WorkerParameters)
-    : Worker(context, workerParams) {
+class PollWorker(val context: Context, workerParameters: WorkerParameters)
+    : Worker(context, workerParameters) {
 
     override fun doWork(): Result {
         val query = QueryPreferences.getStoredQuery(context)
         val lastResultId = QueryPreferences.getLastResultId(context)
-        val items: List<GalleryItem> = if(query.isEmpty()){
+        val items: List<GalleryItem> = if (query.isEmpty()) {
             FlickrFetchr().fetchPhotosRequest()
                 .execute()
                 .body()
                 ?.photos
                 ?.galleryItems
-        }else{
+        } else {
             FlickrFetchr().searchPhotosRequest(query)
                 .execute()
                 .body()
@@ -41,6 +41,7 @@ class PollWorker(val context: Context, workerParams: WorkerParameters)
         } else {
             Log.i(TAG, "Got a new result: $resultId")
             QueryPreferences.setLastResultId(context, resultId)
+
             val intent = PhotoGalleryActivity.newIntent(context)
             val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
 
