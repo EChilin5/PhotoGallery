@@ -24,28 +24,36 @@ class FlickrFetchr {
     init {
 
         val client = OkHttpClient.Builder()
-                .addInterceptor(PhotoInterceptor())
-                .build()
+            .addInterceptor(PhotoInterceptor())
+            .build()
 
         val retrofit: Retrofit = Retrofit.Builder()
-                .baseUrl("https://api.flickr.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build()
+            .baseUrl("https://api.flickr.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .build()
 
         flickrApi = retrofit.create(FlickrApi::class.java)
     }
 
+    fun fetchPhotosRequest(): Call<FlickrResponse> {
+        return flickrApi.fetchPhotos()
+    }
+
     fun fetchPhotos(): LiveData<List<GalleryItem>> {
-        return fetchPhotoMetadata(flickrApi.fetchPhotos())
+        return fetchPhotoMetdadata(fetchPhotosRequest())
+    }
+
+    fun searchPhotosRequest(query: String): Call<FlickrResponse> {
+        return flickrApi.searchPhotos(query)
     }
 
     fun searchPhotos(query: String): LiveData<List<GalleryItem>> {
-        return fetchPhotoMetadata(flickrApi.searchPhotos(query))
+        return fetchPhotoMetdadata(searchPhotosRequest(query))
     }
 
-    private fun fetchPhotoMetadata(flickrRequest: Call<FlickrResponse>)
-            : LiveData<List<GalleryItem>> {
+    private fun fetchPhotoMetdadata(flickrRequest: Call<FlickrResponse>)
+            : LiveData<List<GalleryItem>>{
         val responseLiveData: MutableLiveData<List<GalleryItem>> = MutableLiveData()
 
         flickrRequest.enqueue(object : Callback<FlickrResponse> {
@@ -59,7 +67,7 @@ class FlickrFetchr {
                 val flickrResponse: FlickrResponse? = response.body()
                 val photoResponse: PhotoResponse? = flickrResponse?.photos
                 var galleryItems: List<GalleryItem> = photoResponse?.galleryItems
-                        ?: mutableListOf()
+                    ?: mutableListOf()
                 galleryItems = galleryItems.filterNot {
                     it.url.isNullOrBlank()
                 }
